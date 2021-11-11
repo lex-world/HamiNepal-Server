@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>haminepal API</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Baloo+2&display=swap">
+
+    <style>
+        * {
+            font-family: 'Baloo 2', cursive;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .header {
+            background: #00ff1345;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo {
+            color: #8529ff;
+            font-size: 2em;
+            letter-spacing: 5px;
+        }
+
+        body {
+            color: #4a4a4a;
+            font-size: 1em;
+            font-weight: 400;
+            line-height: 1.5;
+            display: grid;
+            grid-template-rows: 10vh 70vh 10vh;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .side-bar-legend {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: #c1fac1;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 200px auto;
+            grid-gap: 30px;
+        }
+
+        .introduction {
+            margin-bottom: 50px;
+        }
+
+        .main-body {
+            padding-bottom: 60px;
+            padding-top: 90px;
+            overflow-y: scroll;
+        }
+
+        .title {
+            font-size: 2em;
+            font-weight: 500;
+        }
+
+        .table-full-width {
+            width: 100%;
+        }
+
+        .api-item {
+            margin-bottom: 30px;
+        }
+
+        .table-full-width tbody tr th,
+        .table-full-width tbody tr td {
+            text-align: center
+        }
+
+        .footer {
+            background: #00ff1345
+        }
+
+        .footer a,
+        .side-bar-legend a {
+            transition: all .3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            color: #8529ff;
+            font-weight: 600;
+        }
+
+        .footer a:hover,
+        .side-bar-legend a:hover {
+            color: #62b6e7;
+        }
+
+        .spinner {
+            background-color: white;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            color: #4a4a4a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner .loader {
+            height: 3rem;
+            width: 3rem;
+        }
+
+        .spinner.hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h2 class="logo">haminepal api</h2>
+    </div>
+    <div class="spinner">
+        <span class="loader"></span>
+    </div>
+    <div class="main-content">
+        <div class="side-bar-legend">
+            <h1 class="title">Legend</h1>
+            <div class="link">
+                <a href="#introduction">Introduction</a>
+            </div>
+        </div>
+        <div class="main-body">
+            <div class="introduction" id="introduction">
+                <h1 class="title">Introduction</h1>
+                <p>For the time being, all of the following URLS start with a trailing
+                    <code>http://localhost:5000/api/</code>
+                </p>
+            </div>
+            <div class="api">
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Copyright @ <a href="http://haminepal.com/" target="_blank">haminepal.com</a>
+
+    </div>
+
+    <script>
+        let dqsa = (slector) => document.querySelectorAll(slector);
+
+        let sideBarLegend = dqsa('.side-bar-legend')[0];
+        let spinner = dqsa('.spinner')[0];
+        let apiContainer = dqsa('.api')[0];
+
+        let apiList;
+
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+
+                apiList = JSON.parse(JSON.parse(this.responseText));
+
+                console.log(apiList);
+
+                let sideBarLegendLinks = '';
+
+                let headerTags = '';
+
+                let apiDivs = '';
+
+                apiList.header_tags.forEach(tag => headerTags += `<th><abbr title="${tag[1]}">${tag[0]}</abbr></th>`);
+
+                for (const [key, value] of Object.entries(apiList.data)) {
+
+                    sideBarLegendLinks += `
+                    <div class="link">
+                        <a href="#${value.name.toLowerCase()}">${value.name}</a>
+                    </div>`;
+
+                    let tableData = '';
+
+                    let tableRows = '';
+                    console.log(value.api)
+
+                    value.api.forEach(item => {
+                        tableRows += '<tr>';
+
+                        for (const [name, d] of Object.entries(item)) {
+                            tableData += `<th>${d}</th>`;
+                        }
+
+                        tableRows += tableData;
+
+                        tableRows += '</tr>';
+                    });
+
+                    apiDivs += `<div class="api-item" id="${value.name.toLowerCase()}">
+                        <h1 class="title">${value.name}</h1>
+                        <table class="table table-full-width">
+                            <thead>
+                                <tr>
+                                    ${headerTags}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                    </div>`;
+                }
+
+                apiContainer.innerHTML += apiDivs;
+                sideBarLegend.innerHTML += sideBarLegendLinks;
+
+                spinner.classList.add('hidden');
+            }
+        };
+        xhttp.open("GET", "/api/v1/docs/get-api-list", true);
+        xhttp.send();
+    </script>
+
+</body>
+
+</html>
